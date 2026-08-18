@@ -13,6 +13,9 @@ type TransferStore struct {
 	db *DB
 }
 
+// transferSiloCache 按筒仓缓存调拨列表
+var transferSiloCache = make(map[string][]*model.TransferRecord)
+
 // NewTransferStore 创建调拨存储
 func NewTransferStore(db *DB) *TransferStore {
 	return &TransferStore{db: db}
@@ -88,6 +91,9 @@ func (s *TransferStore) ListByStatus(status model.TransferStatus) ([]*model.Tran
 
 // ListBySilo 按筒仓查询调拨列表
 func (s *TransferStore) ListBySilo(siloID string) ([]*model.TransferRecord, error) {
+	if cached, ok := transferSiloCache[siloID]; ok {
+		return cached, nil
+	}
 	rows, err := s.db.conn.Query(
 		`SELECT id, from_silo_id, to_silo_id, grain_type, quantity, status, scheduled_at, completed_at, operator, remark, created_at, updated_at
 		 FROM transfers WHERE from_silo_id = ? OR to_silo_id = ? ORDER BY created_at DESC`, siloID, siloID,
@@ -113,6 +119,7 @@ func (s *TransferStore) ListBySilo(siloID string) ([]*model.TransferRecord, erro
 		}
 		transfers = append(transfers, &t)
 	}
+	transferSiloCache[siloID] = transfers
 	return transfers, nil
 }
 
