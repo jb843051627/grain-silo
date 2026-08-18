@@ -59,6 +59,9 @@ func (s *SiloService) GetSilo(id string) (*model.Silo, error) {
 	if err != nil {
 		return nil, err
 	}
+	if silo == nil {
+		return nil, model.ErrSiloNotFound
+	}
 	return silo, nil
 }
 
