@@ -61,9 +61,6 @@ func (s *ReadingService) RecordReading(siloID string, temp, humidity float64) (*
 func (s *ReadingService) BatchIngestReadings(ctx context.Context, readings []*model.Reading) (int, error) {
 	count := 0
 	for i, r := range readings {
-		if ctx.Err() != nil {
-			return count, ctx.Err()
-		}
 		r.ID = uuid.NewString()
 		if r.RecordedAt.IsZero() {
 			r.RecordedAt = time.Now().UTC()
