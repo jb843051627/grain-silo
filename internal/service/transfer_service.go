@@ -160,7 +160,14 @@ func (s *TransferService) CancelTransfer(id, operator string) (*model.TransferRe
 
 // GetTransfer 获取调拨详情
 func (s *TransferService) GetTransfer(id string) (*model.TransferRecord, error) {
-	return s.transferStore.GetByID(id)
+	transfer, err := s.transferStore.GetByID(id)
+	if err != nil {
+		return nil, err
+	}
+	if transfer == nil {
+		return nil, model.ErrTransferNotFound
+	}
+	return transfer, nil
 }
 
 // ListPendingTransfers 列出待处理调拨

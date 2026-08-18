@@ -45,7 +45,7 @@ func (s *TransferStore) GetByID(id string) (*model.TransferRecord, error) {
 		&t.ScheduledAt, &completedAt, &t.Operator, &t.Remark, &t.CreatedAt, &t.UpdatedAt,
 	)
 	if err == sql.ErrNoRows {
-		return nil, nil
+		return nil, model.ErrTransferNotFound
 	}
 	if err != nil {
 		return nil, fmt.Errorf("query transfer: %w", err)
