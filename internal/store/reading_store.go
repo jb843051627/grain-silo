@@ -9,8 +9,6 @@ import (
 )
 
 // ReadingStore 读数存储
-var readingCache = make(map[string][]*model.Reading)
-
 type ReadingStore struct {
 	db *DB
 }
@@ -50,10 +48,7 @@ func (s *ReadingStore) GetByID(id string) (*model.Reading, error) {
 
 // ListBySilo 按筒仓查询读数列表
 func (s *ReadingStore) ListBySilo(siloID string, limit int) ([]*model.Reading, error) {
-	if cached, ok := readingCache[siloID]; ok {
-		return cached, nil
-	}
-	rows, err := s.db.conn.Query(
+rows, err := s.db.conn.Query(
 		`SELECT id, silo_id, temp, humidity, recorded_at FROM readings WHERE silo_id = ? ORDER BY recorded_at DESC LIMIT ?`,
 		siloID, limit,
 	)
@@ -71,8 +66,9 @@ func (s *ReadingStore) ListBySilo(siloID string, limit int) ([]*model.Reading, e
 		}
 		readings = append(readings, &r)
 	}
-	readingCache[siloID] = readings
-	return readings, nil
+	result := make([]*model.Reading, len(readings))
+	copy(result, readings)
+	return result, nil
 }
 
 // ListByTimeRange 按时间范围查询
