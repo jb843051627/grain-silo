@@ -6,17 +6,17 @@
 
 ```bash
 # 构建指定架构
-./build_benzhi_docker.sh grain-silo-bug-1 linux/amd64
-./build_benzhi_docker.sh grain-silo-bug-1 linux/arm64
+./build_benzhi_docker.sh grain-silo linux/amd64
+./build_benzhi_docker.sh grain-silo linux/arm64
 
 # 或直接用 docker buildx
-docker buildx build --platform linux/amd64 -t benzhi/grain-silo-bug-1:latest -f benzhi.Dockerfile .
+docker buildx build --platform linux/amd64 -t benzhi/grain-silo:latest -f benzhi.Dockerfile .
 ```
 
 ## 运行
 
 ```bash
-docker run -p 8080:8080 benzhi/grain-silo-bug-1:latest
+docker run -p 8080:8080 benzhi/grain-silo:latest
 ```
 
 ## 说明

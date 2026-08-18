@@ -50,7 +50,7 @@ func (s *ReadingService) RecordReading(siloID string, temp, humidity float64) (*
 	if err := s.readingStore.Create(reading); err != nil {
 		return nil, err
 	}
-	s.mu.Lock()
+	s.mu.RLock()
 	s.latestReadings[siloID] = reading
 	s.mu.Unlock()
 	s.checkThresholds(siloID, temp, humidity)
