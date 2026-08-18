@@ -50,9 +50,9 @@ func (s *ReadingService) RecordReading(siloID string, temp, humidity float64) (*
 	if err := s.readingStore.Create(reading); err != nil {
 		return nil, err
 	}
-	s.mu.RLock()
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	s.latestReadings[siloID] = reading
-	s.mu.Unlock()
 	s.checkThresholds(siloID, temp, humidity)
 	return reading, nil
 }
@@ -85,10 +85,21 @@ func (s *ReadingService) GetLatestReading(siloID string) (*model.Reading, error)
 	s.mu.RLock()
 	if r, ok := s.latestReadings[siloID]; ok {
 		s.mu.RUnlock()
-		return r, nil
+		result := &model.Reading{
+			ID:        r.ID,
+			SiloID:    r.SiloID,
+			Temp:      r.Temp,
+			Humidity:  r.Humidity,
+			RecordedAt: r.RecordedAt,
+		}
+		return result, nil
 	}
 	s.mu.RUnlock()
-	return s.readingStore.GetLatest(siloID)
+	reading, err := s.readingStore.GetLatest(siloID)
+	if err != nil {
+		return nil, fmt.Errorf("get latest reading: %w", err)
+	}
+	return reading, nil
 }
 
 // ListReadingsBySilo 按筒仓列出读数
