@@ -65,7 +65,7 @@ func (s *MaintenanceService) StartMaintenance(id, technician string) (*model.Mai
 		return nil, model.ErrMaintenanceInProgress
 	}
 	if err := s.maintStore.StartMaintenance(id, technician); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("start maintenance: %w", err)
 	}
 	task.Status = model.MAINT_IN_PROGRESS
 	task.Technician = technician
@@ -76,11 +76,16 @@ func (s *MaintenanceService) StartMaintenance(id, technician string) (*model.Mai
 
 // CompleteMaintenance 完成维护
 func (s *MaintenanceService) CompleteMaintenance(id, operator string, cost float64) (*model.MaintenanceTask, error) {
-	task, _ := s.maintStore.GetByID(id)
+	task, err := s.maintStore.GetByID(id)
+	if err != nil {
+		return nil, fmt.Errorf("get maintenance: %w", err)
+	}
 	if task.Status != model.MAINT_IN_PROGRESS {
 		return nil, model.ErrInvalidStatus
 	}
-	s.maintStore.CompleteMaintenance(id, cost)
+	if err := s.maintStore.CompleteMaintenance(id, cost); err != nil {
+		return nil, fmt.Errorf("complete maintenance: %w", err)
+	}
 	task.Status = model.MAINT_COMPLETED
 	task.Cost = cost
 	task.UpdatedAt = time.Now().UTC()
