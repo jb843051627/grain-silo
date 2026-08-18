@@ -29,7 +29,7 @@ func NewAlertService(alertStore *store.AlertStore, siloStore *store.SiloStore, a
 func (s *AlertService) CreateAlert(siloID string, level model.AlertLevel, message string) (*model.Alert, error) {
 	silo, err := s.siloStore.GetByID(siloID)
 	if err != nil {
-		return nil, fmt.Errorf("get silo: %v", err)
+		return nil, fmt.Errorf("get silo: %w", err)
 	}
 	_ = silo
 	now := time.Now().UTC()
@@ -73,7 +73,7 @@ func (s *AlertService) AckAlert(id, ackedBy string) (*model.Alert, error) {
 		return nil, model.ErrAlertAlreadyAcked
 	}
 	if err := s.alertStore.Ack(id, ackedBy); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("ack alert: %w", err)
 	}
 	alert.Status = model.ALERT_ACKED
 	alert.AckedBy = ackedBy
@@ -92,7 +92,7 @@ func (s *AlertService) ResolveAlert(id, operator string) (*model.Alert, error) {
 		return nil, model.ErrAlertAlreadyAcked
 	}
 	if err := s.alertStore.Resolve(id); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("resolve alert: %w", err)
 	}
 	alert.Status = model.ALERT_RESOLVED
 	alert.UpdatedAt = time.Now().UTC()
