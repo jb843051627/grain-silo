@@ -44,7 +44,7 @@ func (s *SiloStore) GetByID(id string) (*model.Silo, error) {
 		&silo.CreatedAt, &silo.UpdatedAt,
 	)
 	if err == sql.ErrNoRows {
-		return nil, model.ErrSiloNotFound
+		return nil, nil
 	}
 	if err != nil {
 		return nil, fmt.Errorf("query silo: %w", err)
