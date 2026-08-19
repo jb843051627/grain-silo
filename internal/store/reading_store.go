@@ -135,7 +135,8 @@ func (s *ReadingStore) BatchCreate(readings []*model.Reading) (int, error) {
 			r.ID, r.SiloID, r.Temp, r.Humidity, r.RecordedAt,
 		)
 		if err != nil {
-			continue
+			tx.Rollback()
+			return 0, fmt.Errorf("insert reading: %w", err)
 		}
 	}
 	if err := tx.Commit(); err != nil {
