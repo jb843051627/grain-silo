@@ -132,6 +132,32 @@ func (s *SiloStore) UpdateLoad(id string, load float64) error {
 	return nil
 }
 
+// TransferLoad 原子调拨：扣减源仓同时增加目标仓，任一步失败整体回滚
+func (s *SiloStore) TransferLoad(fromID, toID string, quantity float64) error {
+	tx, err := s.db.conn.Begin()
+	if err != nil {
+		return fmt.Errorf("begin transfer tx: %w", err)
+	}
+	if _, err := tx.Exec(
+		`UPDATE silos SET current_load = current_load - ?, updated_at = ? WHERE id = ?`,
+		quantity, now(), fromID,
+	); err != nil {
+		tx.Rollback()
+		return fmt.Errorf("debit source silo: %w", err)
+	}
+	if _, err := tx.Exec(
+		`UPDATE silos SET current_load = current_load + ?, updated_at = ? WHERE id = ?`,
+		quantity, now(), toID,
+	); err != nil {
+		tx.Rollback()
+		return fmt.Errorf("credit target silo: %w", err)
+	}
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("commit transfer: %w", err)
+	}
+	return nil
+}
+
 // UpdateStatus 更新状态
 func (s *SiloStore) UpdateStatus(id string, status model.SiloStatus) error {
 	_, err := s.db.conn.Exec(
