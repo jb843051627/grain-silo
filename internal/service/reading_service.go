@@ -70,7 +70,7 @@ func (s *ReadingService) BatchIngestReadings(ctx context.Context, readings []*mo
 	}
 	count, err := s.readingStore.BatchCreate(readings)
 	if err != nil {
-		return count, err
+		return 0, fmt.Errorf("batch create readings: %w", err)
 	}
 	for _, r := range readings {
 		s.mu.Lock()

@@ -129,13 +129,14 @@ func (s *ReadingStore) BatchCreate(readings []*model.Reading) (int, error) {
 	if err != nil {
 		return 0, fmt.Errorf("begin tx: %w", err)
 	}
-	for _, r := range readings {
+	for i, r := range readings {
 		_, err := tx.Exec(
 			`INSERT INTO readings (id, silo_id, temp, humidity, recorded_at) VALUES (?, ?, ?, ?, ?)`,
 			r.ID, r.SiloID, r.Temp, r.Humidity, r.RecordedAt,
 		)
 		if err != nil {
-			continue
+			tx.Rollback()
+			return i, fmt.Errorf("batch insert reading at %d: %w", i, err)
 		}
 	}
 	if err := tx.Commit(); err != nil {
