@@ -51,7 +51,7 @@ func (s *ReadingStore) GetByID(id string) (*model.Reading, error) {
 // ListBySilo 按筒仓查询读数列表
 func (s *ReadingStore) ListBySilo(siloID string, limit int) ([]*model.Reading, error) {
 	if cached, ok := readingCache[siloID]; ok {
-		return cached, nil
+		return copyReadings(cached), nil
 	}
 	rows, err := s.db.conn.Query(
 		`SELECT id, silo_id, temp, humidity, recorded_at FROM readings WHERE silo_id = ? ORDER BY recorded_at DESC LIMIT ?`,
@@ -72,7 +72,17 @@ func (s *ReadingStore) ListBySilo(siloID string, limit int) ([]*model.Reading, e
 		readings = append(readings, &r)
 	}
 	readingCache[siloID] = readings
-	return readings, nil
+	return copyReadings(readings), nil
+}
+
+// copyReadings 返回读数列表的深拷贝，避免调用方通过返回的指针修改字段而污染缓存
+func copyReadings(src []*model.Reading) []*model.Reading {
+	dst := make([]*model.Reading, len(src))
+	for i, r := range src {
+		c := *r
+		dst[i] = &c
+	}
+	return dst
 }
 
 // ListByTimeRange 按时间范围查询
