@@ -29,7 +29,7 @@ func NewAlertService(alertStore *store.AlertStore, siloStore *store.SiloStore, a
 func (s *AlertService) CreateAlert(siloID string, level model.AlertLevel, message string) (*model.Alert, error) {
 	silo, err := s.siloStore.GetByID(siloID)
 	if err != nil {
-		return nil, fmt.Errorf("get silo: %v", err)
+		return nil, fmt.Errorf("get silo: %w", err)
 	}
 	_ = silo
 	now := time.Now().UTC()
