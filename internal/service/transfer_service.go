@@ -108,23 +108,23 @@ func (s *TransferService) ExecuteTransfer(id, operator string) (*model.TransferR
 	if fromSilo.CurrentLoad < transfer.Quantity {
 		return nil, model.ErrInvalidQuantity
 	}
-	if toSilo.CurrentLoad+transfer.Quantity > toSilo.Capacity {
-		return nil, model.ErrCapacityExceeded
-	}
 	fromSilo.CurrentLoad = fromSilo.CurrentLoad - transfer.Quantity
 	if fromSilo.CurrentLoad == 0 {
 		fromSilo.Status = model.SILO_EMPTY
 	} else {
 		fromSilo.Status = model.SILO_EMPTYING
 	}
+	if err := s.siloStore.Update(fromSilo); err != nil {
+		return nil, err
+	}
+	if toSilo.CurrentLoad+transfer.Quantity > toSilo.Capacity {
+		return nil, model.ErrCapacityExceeded
+	}
 	toSilo.CurrentLoad = toSilo.CurrentLoad + transfer.Quantity
 	if toSilo.CurrentLoad == toSilo.Capacity {
 		toSilo.Status = model.SILO_FULL
 	} else {
 		toSilo.Status = model.SILO_FILLING
-	}
-	if err := s.siloStore.Update(fromSilo); err != nil {
-		return nil, err
 	}
 	if err := s.siloStore.Update(toSilo); err != nil {
 		return nil, err
