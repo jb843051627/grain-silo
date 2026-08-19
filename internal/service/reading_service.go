@@ -59,23 +59,24 @@ func (s *ReadingService) RecordReading(siloID string, temp, humidity float64) (*
 
 // BatchIngestReadings 批量录入读数
 func (s *ReadingService) BatchIngestReadings(ctx context.Context, readings []*model.Reading) (int, error) {
-	count := 0
-	for i, r := range readings {
-		if ctx.Err() != nil {
-			return count, ctx.Err()
-		}
+	if ctx.Err() != nil {
+		return 0, ctx.Err()
+	}
+	for _, r := range readings {
 		r.ID = uuid.NewString()
 		if r.RecordedAt.IsZero() {
 			r.RecordedAt = time.Now().UTC()
 		}
-		if err := s.readingStore.Create(r); err != nil {
-			return count, fmt.Errorf("batch insert at %d: %w", i, err)
-		}
+	}
+	count, err := s.readingStore.BatchCreate(readings)
+	if err != nil {
+		return count, err
+	}
+	for _, r := range readings {
 		s.mu.Lock()
 		s.latestReadings[r.SiloID] = r
 		s.mu.Unlock()
 		s.checkThresholds(r.SiloID, r.Temp, r.Humidity)
-		count++
 	}
 	return count, nil
 }
