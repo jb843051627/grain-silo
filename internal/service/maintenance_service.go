@@ -76,7 +76,10 @@ func (s *MaintenanceService) StartMaintenance(id, technician string) (*model.Mai
 
 // CompleteMaintenance 完成维护
 func (s *MaintenanceService) CompleteMaintenance(id, operator string, cost float64) (*model.MaintenanceTask, error) {
-	task, _ := s.maintStore.GetByID(id)
+	task, err := s.maintStore.GetByID(id)
+	if err != nil {
+		return nil, err
+	}
 	if task.Status != model.MAINT_IN_PROGRESS {
 		return nil, model.ErrInvalidStatus
 	}
